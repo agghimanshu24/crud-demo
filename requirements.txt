@@ -1,4 +1,6 @@
 psycopg2-binary
+databricks-sql-connector
 streamlit
 pandas
 numpy
+databricks

@@ -1,105 +1,128 @@
-import psycopg2
 import streamlit as st
+from databricks import sql
+import pandas as pd
+
 
 # ---------------- DB CONNECTION ---------------- #
 
-mydb = psycopg2.connect(
-    host="localhost",
-    user="postgres",        
-    password="password",   
-    dbname="crud_new1",
-    port="5432"
-)
+@st.cache_resource
+def get_connection():
+    return sql.connect(
+        server_hostname="dbc-a49f6e9d-ba1d.cloud.databricks.com",
+        http_path="/sql/1.0/warehouses/96c844134aa6f9ca",
+        access_token="dapi8a2353b4ad6f949ef4acea61f2f58877"
+    )
 
-mycursor = mydb.cursor()
 
-st.write("Connection Established with PostgreSQL")
+try:
+    conn = get_connection()
+except Exception as e:
+    st.error("Failed to connect to Unity Catalog")
+    st.exception(e)
+    st.stop()
+
+
+# Change this to your real table
+TABLE_NAME = "crud_demo"
+
+
+# ---------------- HELPER FUNCTIONS ---------------- #
+
+def run_query(query):
+    with conn.cursor() as cur:
+        cur.execute(query)
+        try:
+            return cur.fetchall()
+        except:
+            return None
 
 
 # ---------------- STREAMLIT APP ---------------- #
 
 def main():
 
-    st.title("CRUD Operations With PostgreSQL")
+    st.title("CRUD Operations With Unity Catalog")
 
-    # Sidebar Menu
-    option = st.sidebar.selectbox(
-        "Select an Operation",
+    menu = st.sidebar.selectbox(
+        "Select Operation",
         ("Create", "Read", "Update", "Delete")
     )
 
-    # ---------------- CREATE ---------------- #
-    if option == "Create":
 
-        st.subheader("Create a Record")
+    # -------- CREATE -------- #
+    if menu == "Create":
 
-        name = st.text_input("Enter Name")
-        email = st.text_input("Enter Email")
+        st.subheader("Create Record")
+
+        name = st.text_input("Name")
+        email = st.text_input("Email")
 
         if st.button("Create"):
 
-            sql = "INSERT INTO users(name, email) VALUES (%s, %s)"
-            val = (name, email)
+            query = f"""
+            INSERT INTO {TABLE_NAME}
+            VALUES (
+                (SELECT COALESCE(MAX(id),0)+1 FROM {TABLE_NAME}),
+                '{name}',
+                '{email}'
+            )
+            """
 
-            mycursor.execute(sql, val)
-            mydb.commit()
+            run_query(query)
 
-            st.success("Record Created Successfully!!!")
+            st.success("Record Created Successfully")
 
 
-    # ---------------- READ ---------------- #
-    elif option == "Read":
+    # -------- READ -------- #
+    elif menu == "Read":
 
         st.subheader("Read Records")
 
-        mycursor.execute("SELECT * FROM users")
-        result = mycursor.fetchall()
+        query = f"SELECT * FROM {TABLE_NAME}"
 
-        for row in result:
-            st.write(row)
+        data = run_query(query)
+
+        if data:
+            df = pd.DataFrame(data, columns=["id", "name", "email"])
+            st.dataframe(df)
 
 
-    # ---------------- UPDATE ---------------- #
-    elif option == "Update":
+    # -------- UPDATE -------- #
+    elif menu == "Update":
 
-        st.subheader("Update a Record")
+        st.subheader("Update Record")
 
-        id = st.number_input("Enter ID", min_value=1, step=1)
-        name = st.text_input("Enter New Name")
-        email = st.text_input("Enter New Email")
+        id_val = st.number_input("ID", min_value=1)
+        name = st.text_input("New Name")
+        email = st.text_input("New Email")
 
         if st.button("Update"):
 
-            sql = """
-            UPDATE users
-            SET name = %s, email = %s
-            WHERE id = %s
+            query = f"""
+            UPDATE {TABLE_NAME}
+            SET name='{name}', email='{email}'
+            WHERE id={id_val}
             """
 
-            val = (name, email, id)
+            run_query(query)
 
-            mycursor.execute(sql, val)
-            mydb.commit()
-
-            st.success("Record Updated Successfully!!!")
+            st.success("Record Updated")
 
 
-    # ---------------- DELETE ---------------- #
-    elif option == "Delete":
+    # -------- DELETE -------- #
+    elif menu == "Delete":
 
-        st.subheader("Delete a Record")
+        st.subheader("Delete Record")
 
-        id = st.number_input("Enter ID", min_value=1, step=1)
+        id_val = st.number_input("ID", min_value=1)
 
         if st.button("Delete"):
 
-            sql = "DELETE FROM users WHERE id = %s"
-            val = (id,)
+            query = f"DELETE FROM {TABLE_NAME} WHERE id={id_val}"
 
-            mycursor.execute(sql, val)
-            mydb.commit()
+            run_query(query)
 
-            st.success("Record Deleted Successfully!!!")
+            st.success("Record Deleted")
 
 
 # ---------------- MAIN ---------------- #
