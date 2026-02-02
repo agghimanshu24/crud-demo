@@ -10,7 +10,7 @@ def get_connection():
     return sql.connect(
         server_hostname="dbc-a49f6e9d-ba1d.cloud.databricks.com",
         http_path="/sql/1.0/warehouses/96c844134aa6f9ca",
-        access_token="dapi8a2353b4ad6f949ef4acea61f2f58877"
+        access_token="abc"
     )
 
 
