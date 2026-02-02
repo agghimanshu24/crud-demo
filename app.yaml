@@ -1,0 +1,2 @@
+runtime: streamlit
+entrypoint: app.py
