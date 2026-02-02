@@ -23,7 +23,8 @@ except Exception as e:
 
 
 # Change this to your real table
-TABLE_NAME = "crud_demo"
+TABLE_NAME = "main.streamlit_app.users"
+
 
 
 # ---------------- HELPER FUNCTIONS ---------------- #
