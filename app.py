@@ -8,8 +8,8 @@ import pandas as pd
 @st.cache_resource
 def get_connection():
     return sql.connect(
-        server_hostname="dbc-a49f6e9d-ba1d.cloud.databricks.com",
-        http_path="/sql/1.0/warehouses/96c844134aa6f9ca",
+        server_hostname="abc",
+        http_path="abc",
         access_token="abc"
     )
 
