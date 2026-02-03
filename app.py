@@ -128,5 +128,11 @@ def main():
 
 # ---------------- MAIN ---------------- #
 
-if __name__ == "__main__":
-    main()
+st.set_page_config(page_title="CRUD App", layout="wide")
+
+st.title("CRUD Operations With Unity Catalog")
+
+menu = st.sidebar.selectbox(
+    "Select Operation",
+    ("Create", "Read", "Update", "Delete")
+)
