@@ -32,11 +32,14 @@ def main():
         name = st.text_input("Name")
         email = st.text_input("Email")
         if st.button("Create"):
-            query = f"""
-            INSERT INTO {TABLE_NAME} (id, name, email)
-            VALUES ((SELECT COALESCE(MAX(id),0)+1 FROM {TABLE_NAME}), ?, ?)
-            """
-            run_query(query, (name, email))
+            # First get the next ID
+            id_query = f"SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM {TABLE_NAME}"
+            result = run_query(id_query)
+            next_id = result[0][0] if result else 1
+
+            # Then insert using parameters
+            insert_query = f"INSERT INTO {TABLE_NAME} (id, name, email) VALUES (?, ?, ?)"
+            run_query(insert_query, (next_id, name, email))
             st.success("Record Created Successfully")
 
     elif menu == "Read":
